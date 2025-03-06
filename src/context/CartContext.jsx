@@ -9,8 +9,11 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem("cart");
-      if (savedCart) {
-        setCartItems(JSON.parse(savedCart));
+      if (savedCart && savedCart !== "undefined") {
+        const parsedCart = JSON.parse(savedCart);
+        if (Array.isArray(parsedCart)) {
+          setCartItems(parsedCart);
+        }
       }
     } catch (error) {
       console.error("Failed to load cart from localStorage:", error);
