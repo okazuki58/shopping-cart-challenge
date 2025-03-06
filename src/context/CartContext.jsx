@@ -1,11 +1,11 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const firstItemPrice = useRef(0);
 
-  // LocalStorageからカート情報を読み込む
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem("cart");
@@ -17,12 +17,17 @@ export const CartProvider = ({ children }) => {
     }
   }, []);
 
-  // カート情報をLocalStorageに保存
   useEffect(() => {
     try {
       localStorage.setItem("cart", JSON.stringify(cartItems));
     } catch (error) {
       console.error("Failed to save cart to localStorage:", error);
+    }
+  }, [cartItems]);
+
+  useEffect(() => {
+    if (cartItems.length > 0 && firstItemPrice.current === 0) {
+      firstItemPrice.current = cartItems[0].price * cartItems[0].quantity;
     }
   }, [cartItems]);
 
@@ -56,11 +61,13 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   const getTotalPrice = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    if (cartItems.length === 0) return 0;
+    return firstItemPrice.current;
   };
 
   return (
@@ -71,6 +78,7 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         updateQuantity,
         getTotalPrice,
+        clearCart,
       }}
     >
       {children}

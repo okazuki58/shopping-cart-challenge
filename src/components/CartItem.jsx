@@ -1,20 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useCart } from "../hooks/useCart";
 
-// バグを含むコンポーネント - 数量更新が合計金額に反映されないバグあり
 const CartItem = ({ item }) => {
   const { removeItem, updateQuantity } = useCart();
+  const [localQuantity, setLocalQuantity] = useState(item.quantity);
 
-  // バグ: 数量更新が合計金額に反映されない
-  // 原因: onChangeイベントハンドラの実装に問題がある
   const handleQuantityChange = (e) => {
     const newQuantity = parseInt(e.target.value);
-    if (isNaN(newQuantity)) return;
+    if (isNaN(newQuantity) || newQuantity < 1) return;
 
-    // バグ部分: updateQuantityを呼び出すが、値を更新するだけで合計には反映されない
-    e.target.value = newQuantity; // DOMを直接操作しているが、Reactの状態は更新されていない
-    console.log(`数量を${newQuantity}に変更しました`);
-    // 正しくは: updateQuantity(item.id, newQuantity); を呼び出すべき
+    setLocalQuantity(newQuantity);
+    // 数量変更をカートに反映させる
+    updateQuantity(item.id, newQuantity);
   };
 
   return (
@@ -32,7 +29,7 @@ const CartItem = ({ item }) => {
               id={`quantity-${item.id}`}
               type="number"
               min="1"
-              value={item.quantity}
+              value={localQuantity}
               onChange={handleQuantityChange}
               className="quantity-input"
             />
@@ -43,7 +40,7 @@ const CartItem = ({ item }) => {
         </div>
       </div>
       <div className="cart-item-subtotal">
-        <p>小計: ¥{(item.price * item.quantity).toLocaleString()}</p>
+        <p>小計: ¥{(item.price * localQuantity).toLocaleString()}</p>
       </div>
     </div>
   );
